@@ -1,6 +1,6 @@
 #include "Progress.hpp"
 #include "onekpaq_common.h"
-#include <assert.h>
+#include <iomanip>
 
 static Progress gProgress;
 
@@ -20,6 +20,9 @@ void PROGRESS_END(const char *name)
 }
 
 void Progress::start(const std::string& name, size_t total) {
+	if (m_startTime == 0) {
+		m_startTime = std::time(nullptr);
+	}
 	ProgressEntry entry{name, total, 0, m_progress.size()};
 	m_progress.insert({name, entry});
 }
@@ -45,25 +48,31 @@ void Progress::print() {
 	float range = 1.;
 	float value = 0.;
 	int spinner = 0;
-	// std::string out = "";
 	for (auto &it:sorted) {
 		auto progress = it.second;
 		if (progress.total == 0) {
 			spinner += progress.value;
 		} else {
-			assert(progress.value <= progress.total);
 			float stage = 1.f / progress.total;
 			range *= stage;
 			value += (progress.value-1) * range;
-			// out += std::string("[") + progress.name + std::string(" ") + std::to_string(progress.value) + std::string("/") + std::to_string(progress.total) + std::string("] ");
 		}
 	}
 	const char spinners[4] = {'/', '-', '\\', '|'};
 	int barLength = 50;
 	int bar = value * (barLength - 1);
 
-	fprintf(stderr, "[%.*s>%.*s] %3.2f %c   \r",
+	std::string etaString = "...";
+	if (value > 0) {
+		std::time_t now = std::time(nullptr);
+		std::time_t eta = m_startTime + (now - m_startTime) / value;
+		std::stringstream etaStringStream;
+		etaStringStream << std::put_time(std::localtime(&eta), "%F %X");
+		etaString = etaStringStream.str();
+	}
+
+	fprintf(stderr, "[%.*s>%.*s|%03.2f%%|%c] ETA: %s         \r",
 		bar,           "==================================================",
 		barLength-bar, "                                                  ",
-		value*100.f, spinners[spinner % 4]);
+		value*100.f, spinners[spinner % 4], etaString.c_str());
 }

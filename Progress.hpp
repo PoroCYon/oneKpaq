@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
+#include <ctime>
 
 class Progress {
 public:
@@ -18,4 +19,5 @@ public:
 private:
 	void print();
 	std::map<std::string, ProgressEntry> m_progress;
+	std::time_t m_startTime = 0;
 };

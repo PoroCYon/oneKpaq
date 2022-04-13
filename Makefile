@@ -26,6 +26,8 @@ COMMONFLAGS += -DHAS_LIBDISPATCH -I$(LIBDISPATCH_INC_DIR) -L$(LIBDISPATCH_LIB_DI
 else
 COMMONFLAGS += -DHAS_LIBDISPATCH -ldispatch -fblocks -lBlocksRuntime
 endif
+else
+COMMONFLAGS += -pthread
 endif
 
 # debugging...

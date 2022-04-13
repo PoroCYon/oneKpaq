@@ -118,7 +118,10 @@ void StreamCodec::Encode(const std::vector<std::vector<u8>> &blocks,EncodeMode m
 			typedef std::vector<BlockKeyDef> CombinationDef;
 
 			float currentBestLength=std::numeric_limits<float>::infinity();
+
+			PROGRESS_START("Shift", 16);
 			for (uint shift=1;shift<=16;shift++) {
+				PROGRESS_TICK("Shift");
 				// create possible combinations
 				std::map<BlockKeyDef,BlockDef> blockMap;
 				std::vector<CombinationDef> combinations;
@@ -163,9 +166,12 @@ void StreamCodec::Encode(const std::vector<std::vector<u8>> &blocks,EncodeMode m
 				// process all possible combinations from map.
 				bool multiRetry=complexity>=EncoderComplexity::High;
 				bool multiInit=complexity>=EncoderComplexity::Medium;
+				PROGRESS_START("CreateContextModels", blockMap.size());
 				for (auto &it:blockMap) {
+					PROGRESS_TICK("CreateContextModels");
 					std::get<0>(it.second)->CreateContextModels(std::get<2>(it.second),multiRetry,multiInit);
 				}
+				PROGRESS_END("CreateContextModels");
 
 				// find best
 				auto &best=*std::min_element(combinations.begin(),combinations.end(),[&](const CombinationDef &a,const CombinationDef &b) {
@@ -187,6 +193,7 @@ void StreamCodec::Encode(const std::vector<std::vector<u8>> &blocks,EncodeMode m
 						finalBlocks.push_back(std::move(blockMap[it]));
 				}
 			}
+			PROGRESS_END("Shift");
 
 			if (!cacheFileName.empty()) {
 				cf.clear(uint(encodeBlocks.size()));
@@ -237,7 +244,7 @@ void StreamCodec::Encode(const std::vector<std::vector<u8>> &blocks,EncodeMode m
 			_destAsm2.insert(_destAsm2.end(),tmp1.end()-4,tmp1.end());
 			_destAsm2.insert(_destAsm2.end(),tmp2.begin(),tmp2.end());
 		}
-		LAST_TICK();
+		DebugPrint("\n"); //newline after progress bar
 
 		INFO("Compression done. Following blocks were created:");
 		uint i=0,pos=0,totalHLength=0,totalLength=0;

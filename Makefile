@@ -44,7 +44,7 @@ endif
 
 PROG	:= onekpaq
 SLINKS	:= onekpaq_encode #onekpaq_decode
-OBJS	:= obj/ArithEncoder.cpp.o obj/ArithDecoder.cpp.o obj/BlockCodec.cpp.o obj/StreamCodec.cpp.o obj/CacheFile.cpp.o \
+OBJS	:= obj/ArithEncoder.cpp.o obj/ArithDecoder.cpp.o obj/BlockCodec.cpp.o obj/StreamCodec.cpp.o obj/CacheFile.cpp.o obj/Progress.cpp.o \
 	obj/onekpaq_main.cpp.o obj/log.c.o
 
 ifeq ($(BITS),32)

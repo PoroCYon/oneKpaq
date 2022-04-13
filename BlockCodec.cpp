@@ -556,7 +556,6 @@ void BlockCodec::CreateContextModels(const std::vector<u8> &src,bool multipleRet
 	uint bitLength=uint(src.size()-_cm->GetStartOffset())*8;
 	std::vector<std::vector<Probability>> probabilityMap(bitLength);
 
-	TICK();
 	DispatchLoop(bitLength,32,[&](size_t i) {
 		_cm->CalculateAllProbabilities(probabilityMap[i],src,uint(i+_cm->GetStartOffset()*8),_shift);
 	});
@@ -637,8 +636,13 @@ void BlockCodec::CreateContextModels(const std::vector<u8> &src,bool multipleRet
 	float currentBestLength=std::numeric_limits<float>::infinity();
 	float staticLength=StaticLength(currentBestModels);
 
+	PROGRESS_START("SeedWeights", seedWeights.size());
 	for (auto &sw:seedWeights) {
+		PROGRESS_TICK("SeedWeights");
+
+		PROGRESS_START("CoreIteration", retryCount);
 		for (uint i=0;i<retryCount;i++) {
+			PROGRESS_TICK("CoreIteration");
 			std::vector<Model> testModels=currentBestModels;
 			float testLength=std::numeric_limits<float>::infinity();
 			for (auto w:sw) {
@@ -647,23 +651,28 @@ void BlockCodec::CreateContextModels(const std::vector<u8> &src,bool multipleRet
 					model=d(mt);
 				testModels.push_back(Model{model,w});
 			}
+			PROGRESS_START("IterateModels", 0);
 			for (;;) {
 				auto best=IterateModels(testModels);
-				TICK();
+				PROGRESS_TICK("IterateModels");
+				// TICK();
 				best.second+=staticLength;
 				if (best.second<testLength) {
 					testModels=best.first;
 					testLength=best.second;
 				} else break;
 			}
+			PROGRESS_END("IterateModels");
 			if (testLength<currentBestLength) {
 				currentBestModels=testModels;
 				currentBestLength=testLength;
 			}
 			if (!sw.size()) break;
 		}
+		PROGRESS_END("CoreIteration");
 		if (!multipleInitPoints) break;
 	}
+	PROGRESS_END("SeedWeights");
 
 	// mark length
 	_rawLength=uint(src.size());

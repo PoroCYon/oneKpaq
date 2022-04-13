@@ -33,8 +33,9 @@ typedef uintptr_t ulong;
 extern void DebugPrint(const char *str,...);
 extern void DebugPrintAndDie(const char *str,...);
 
-#define TICK() DebugPrint(".")
-#define LAST_TICK() DebugPrint(".\n")
+extern void PROGRESS_START(const char *name, size_t total);
+extern void PROGRESS_TICK(const char *name);
+extern void PROGRESS_END(const char *name);
 
 #define INFO(str,...) DebugPrint("I " str "\n",## __VA_ARGS__)
 #define ABORT(str,...) DebugPrintAndDie("E " str "\n",## __VA_ARGS__)
